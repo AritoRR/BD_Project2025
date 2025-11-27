@@ -40,7 +40,8 @@ public class MasterController {
     @PostMapping("/create")
     public String createMaster(@Valid @ModelAttribute("master") MasterDTO masterDTO,
                                BindingResult result,
-                               RedirectAttributes redirectAttributes) {
+                               RedirectAttributes redirectAttributes,
+                               Model model) {  // Добавлен Model параметр
         if (result.hasErrors()) {
             return "masters/create";
         }
@@ -49,7 +50,13 @@ public class MasterController {
             masterService.create(masterDTO);
             redirectAttributes.addFlashAttribute("successMessage", "Мастер успешно создан");
         } catch (RuntimeException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            // Обработка ошибок триггеров: лимит мастеров
+            String errorMessage = e.getMessage();
+            if (errorMessage.contains("Нельзя добавить более 10 мастеров")) {
+                model.addAttribute("errorMessage", errorMessage);
+                return "masters/create";  // Возвращаем на форму с ошибкой
+            }
+            redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
             return "redirect:/masters/create";
         }
 

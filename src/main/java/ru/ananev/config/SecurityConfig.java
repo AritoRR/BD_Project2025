@@ -5,16 +5,22 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import ru.ananev.entity.User;
+import ru.ananev.repository.UserRepository;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    private final UserRepository userRepository;
+
+    public SecurityConfig(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -24,19 +30,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     @Override
     public UserDetailsService userDetailsService() {
-        UserDetails admin = User.builder()
-                .username("admin")
-                .password(passwordEncoder().encode("1111"))
-                .roles("ADMIN")
-                .build();
+        return username -> {
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден: " + username));
 
-        UserDetails operator = User.builder()
-                .username("operator")
-                .password(passwordEncoder().encode("1111"))
-                .roles("OPERATOR")
-                .build();
-
-        return new InMemoryUserDetailsManager(admin, operator);
+            return org.springframework.security.core.userdetails.User.builder()
+                    .username(user.getUsername())
+                    .password(user.getPasswordHash())
+                    .roles(user.getRole())
+                    .build();
+        };
     }
 
     @Override
@@ -44,9 +47,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http
                 .authorizeRequests()
                 .antMatchers("/", "/login", "/css/**", "/js/**").permitAll()
-                // Админ имеет доступ ко всему
                 .antMatchers("/masters/**", "/cars/**", "/services/**", "/users/**").hasRole("ADMIN")
-                // Оператор может только создавать работы и смотреть отчеты
                 .antMatchers("/works/**", "/reports/**").hasAnyRole("OPERATOR", "ADMIN")
                 .anyRequest().authenticated()
                 .and()

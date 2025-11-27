@@ -68,6 +68,13 @@ public class WorkController {
             workService.create(workDTO);
             redirectAttributes.addFlashAttribute("successMessage", "Работа успешно назначена");
         } catch (RuntimeException e) {
+            // Обработка ошибок триггеров: лимит работ мастера в день
+            String errorMessage = e.getMessage();
+            if (errorMessage.contains("Мастер уже выполнил") && errorMessage.contains("работ за дату")) {
+                model.addAttribute("errorMessage", errorMessage);
+                addDropdownDataToModel(model);
+                return "works/create";  // Возвращаем на форму с ошибкой
+            }
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
             addDropdownDataToModel(model);
             return "works/create";
@@ -103,6 +110,14 @@ public class WorkController {
             workService.update(id, workDTO);
             redirectAttributes.addFlashAttribute("successMessage", "Работа успешно обновлена");
         } catch (RuntimeException e) {
+            // Обработка ошибок триггеров: изменение даты работы и лимит работ
+            String errorMessage = e.getMessage();
+            if (errorMessage.contains("Нельзя изменять дату работы более чем на 1 день") ||
+                    errorMessage.contains("Мастер уже выполнил")) {
+                model.addAttribute("errorMessage", errorMessage);
+                addDropdownDataToModel(model);
+                return "works/edit";  // Возвращаем на форму с ошибкой
+            }
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
             addDropdownDataToModel(model);
             return "redirect:/works/edit/" + id;

@@ -40,7 +40,8 @@ public class UserService {
         }
 
         User user = convertToEntity(userDTO);
-        user.setPasswordHash(passwordEncoder.encode("1111")); // Всегда пароль 1111
+        // BCrypt автоматически генерирует salt и хэширует пароль
+        user.setPasswordHash(passwordEncoder.encode(userDTO.getPassword()));
         User savedUser = userRepository.save(user);
         return convertToDTO(savedUser);
     }
@@ -57,8 +58,10 @@ public class UserService {
         existingUser.setUsername(userDTO.getUsername());
         existingUser.setRole(userDTO.getRole());
 
-        // Пароль всегда остается 1111
-        existingUser.setPasswordHash(passwordEncoder.encode("1111"));
+        if (userDTO.getPassword() != null && !userDTO.getPassword().trim().isEmpty()) {
+            // При обновлении тоже используем BCrypt
+            existingUser.setPasswordHash(passwordEncoder.encode(userDTO.getPassword()));
+        }
 
         User updatedUser = userRepository.save(existingUser);
         return convertToDTO(updatedUser);

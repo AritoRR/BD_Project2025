@@ -37,7 +37,8 @@ public class CarController {
     @PostMapping("/create")
     public String createCar(@Valid @ModelAttribute("car") CarDTO carDTO,
                             BindingResult result,
-                            RedirectAttributes redirectAttributes) {
+                            RedirectAttributes redirectAttributes,
+                            Model model) {  // Добавлен Model параметр
         if (result.hasErrors()) {
             return "cars/create";
         }
@@ -46,7 +47,13 @@ public class CarController {
             carService.create(carDTO);
             redirectAttributes.addFlashAttribute("successMessage", "Автомобиль успешно создан");
         } catch (RuntimeException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            // Обработка ошибок триггеров: уникальность номера
+            String errorMessage = e.getMessage();
+            if (errorMessage.contains("Автомобиль с номером")) {
+                model.addAttribute("errorMessage", errorMessage);
+                return "cars/create";  // Возвращаем на форму с ошибкой
+            }
+            redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
             return "redirect:/cars/create";
         }
 
@@ -68,7 +75,8 @@ public class CarController {
     public String updateCar(@PathVariable Long id,
                             @Valid @ModelAttribute("car") CarDTO carDTO,
                             BindingResult result,
-                            RedirectAttributes redirectAttributes) {
+                            RedirectAttributes redirectAttributes,
+                            Model model) {  // Добавлен Model параметр
         if (result.hasErrors()) {
             return "cars/edit";
         }
@@ -77,7 +85,13 @@ public class CarController {
             carService.update(id, carDTO);
             redirectAttributes.addFlashAttribute("successMessage", "Автомобиль успешно обновлен");
         } catch (RuntimeException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            // Обработка ошибок триггеров: уникальность номера
+            String errorMessage = e.getMessage();
+            if (errorMessage.contains("Автомобиль с номером")) {
+                model.addAttribute("errorMessage", errorMessage);
+                return "cars/edit";  // Возвращаем на форму с ошибкой
+            }
+            redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
             return "redirect:/cars/edit/" + id;
         }
 
@@ -90,7 +104,13 @@ public class CarController {
             carService.delete(id);
             redirectAttributes.addFlashAttribute("successMessage", "Автомобиль успешно удален");
         } catch (RuntimeException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            // Обработка ошибок триггеров: удаление автомобиля с работами
+            String errorMessage = e.getMessage();
+            if (errorMessage.contains("Нельзя удалить автомобиль") && errorMessage.contains("выполненных работ")) {
+                redirectAttributes.addFlashAttribute("errorMessage", errorMessage);
+            } else {
+                redirectAttributes.addFlashAttribute("errorMessage", "Ошибка при удалении автомобиля: " + errorMessage);
+            }
         }
         return "redirect:/cars";
     }

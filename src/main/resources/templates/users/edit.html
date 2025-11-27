@@ -21,6 +21,7 @@
             <label class="form-label">Пароль</label>
             <input type="password" class="form-control" th:field="*{password}"
                    placeholder="Оставьте пустым, если не нужно менять пароль">
+            <small class="form-text text-muted">Минимум 6 символов. Оставьте пустым чтобы сохранить текущий пароль.</small>
             <div th:if="${#fields.hasErrors('password')}" class="text-danger" th:errors="*{password}"></div>
         </div>
 
