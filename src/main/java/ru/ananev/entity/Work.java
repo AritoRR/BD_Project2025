@@ -1,6 +1,7 @@
 package ru.ananev.entity;
 
 import javax.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -23,12 +24,12 @@ public class Work {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "service_id", nullable = false, foreignKey = @ForeignKey(name = "fk_works_services"))
-    private Service service;
+    private Service_ service;
 
     // Конструкторы
     public Work() {}
 
-    public Work(LocalDate dateWork, Master master, Car car, Service service) {
+    public Work(LocalDate dateWork, Master master, Car car, Service_ service) {
         this.dateWork = dateWork;
         this.master = master;
         this.car = car;
@@ -68,16 +69,17 @@ public class Work {
         this.car = car;
     }
 
-    public Service getService() {
+    public Service_ getService() {
         return service;
     }
 
-    public void setService(Service service) {
+    public void setService(Service_ service) {
         this.service = service;
     }
 
-    // Метод для получения стоимости услуги в зависимости от типа автомобиля
-    public Double getActualCost() {
+
+    // В сущности Work обнови метод:
+    public BigDecimal getActualCost() {
         if (car.getIsForeign()) {
             return service.getCostForeign();
         } else {

@@ -1,0 +1,18 @@
+spring:
+  security:
+    basic:
+      enabled: false
+  datasource:
+    url: jdbc:postgresql://localhost:5432/autoservice_db
+    username: postgres
+    password: 123456
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+
+logging:
+  level:
+    org.springframework.security: OFF
+    org.springframework: INFO

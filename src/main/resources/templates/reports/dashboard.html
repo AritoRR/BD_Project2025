@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Отчеты - Автосервис</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div class="container">
+    <a class="navbar-brand" href="/dashboard">🚗 Автосервис</a>
+    <div class="navbar-nav ms-auto">
+            <span class="navbar-text text-white me-3">
+                <span sec:authentication="name"></span>
+            </span>
+      <a href="/dashboard" class="btn btn-outline-light btn-sm me-2">Главная</a>
+      <form th:action="@{/logout}" method="post" class="d-inline">
+        <button type="submit" class="btn btn-outline-light btn-sm">Выйти</button>
+      </form>
+    </div>
+  </div>
+</nav>
+
+<div class="container mt-4">
+  <h1>📊 Отчеты и аналитика</h1>
+
+  <!-- Сообщение об ошибке -->
+  <div th:if="${error}" class="alert alert-danger">
+    <span th:text="${error}"></span>
+  </div>
+
+  <div class="row mt-4">
+    <!-- Навигация по отчетам -->
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-header bg-dark text-white">
+          <h5 class="mb-0">📈 Отчеты</h5>
+        </div>
+        <div class="card-body">
+          <div class="list-group">
+            <a href="/reports/cost" class="list-group-item list-group-item-action">
+              💰 Стоимость обслуживания
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Основной контент -->
+    <div class="col-md-9">
+      <!-- Статистика стоимости -->
+      <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+          <h5 class="mb-0">💰 Стоимость обслуживания</h5>
+        </div>
+        <div class="card-body">
+          <div th:if="${costReport != null && costReport.hasData()}">
+            <div class="row text-center">
+              <div class="col-md-4">
+                <div class="border rounded p-3 bg-light">
+                  <h6>🇷🇺 Отечественные</h6>
+                  <h4 class="text-primary" th:text="${#numbers.formatDecimal(costReport.domesticTotal, 1, 2)} + ' руб.'"></h4>
+                  <small class="text-muted"
+                         th:text="'Доля: ' + ${#numbers.formatDecimal(costReport.domesticPercentage, 1, 1)} + '%'">
+                  </small>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="border rounded p-3 bg-light">
+                  <h6>🌍 Иномарки</h6>
+                  <h4 class="text-success" th:text="${#numbers.formatDecimal(costReport.foreignTotal, 1, 2)} + ' руб.'"></h4>
+                  <small class="text-muted"
+                         th:text="'Доля: ' + ${#numbers.formatDecimal(costReport.foreignPercentage, 1, 1)} + '%'">
+                  </small>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="border rounded p-3 bg-light">
+                  <h6>📊 Общая</h6>
+                  <h4 class="text-warning" th:text="${#numbers.formatDecimal(costReport.overallTotal, 1, 2)} + ' руб.'"></h4>
+                  <small class="text-muted">Суммарно</small>
+                </div>
+              </div>
+            </div>
+            <div class="mt-3 text-center">
+              <small class="text-muted">
+                Период:
+                <span th:text="${#temporals.format(costReport.startDate, 'dd.MM.yyyy')}"></span>
+                -
+                <span th:text="${#temporals.format(costReport.endDate, 'dd.MM.yyyy')}"></span>
+              </small>
+            </div>
+          </div>
+          <div th:unless="${costReport != null && costReport.hasData()}" class="text-center py-3">
+            <p class="text-muted">Нет данных за выбранный период</p>
+            <a href="/reports/cost" class="btn btn-primary">Настроить фильтры</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Топ мастеров -->
+      <div class="card">
+        <div class="card-header bg-warning text-dark">
+          <h5 class="mb-0">🏆 Топ-5 мастеров месяца</h5>
+        </div>
+        <div class="card-body">
+          <div th:if="${topMasters != null && !topMasters.empty}" class="table-responsive">
+            <table class="table table-striped">
+              <thead>
+              <tr>
+                <th>Место</th>
+                <th>Мастер</th>
+                <th>Кол-во работ</th>
+                <th>Уникальных авто</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr th:each="master, stat : ${topMasters}">
+                <td>
+                  <span th:if="${stat.index == 0}" class="badge bg-warning">🥇</span>
+                  <span th:if="${stat.index == 1}" class="badge bg-secondary">🥈</span>
+                  <span th:if="${stat.index == 2}" class="badge bg-danger">🥉</span>
+                  <span th:if="${stat.index > 2}" class="badge bg-info" th:text="${stat.index + 1}"></span>
+                </td>
+                <td th:text="${master.masterName}"></td>
+                <td>
+                  <span class="badge bg-primary" th:text="${master.workCount}"></span>
+                </td>
+                <td>
+                  <span class="badge bg-success" th:text="${master.uniqueCarsCount}"></span>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+          <div th:unless="${topMasters != null && !topMasters.empty}" class="text-center py-3">
+            <p class="text-muted">Нет данных за текущий месяц</p>
+            <a href="/reports/masters" class="btn btn-warning">Посмотреть другие периоды</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <a href="/dashboard" class="btn btn-secondary">← Назад в панель управления</a>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

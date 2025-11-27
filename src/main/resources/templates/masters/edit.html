@@ -1,0 +1,24 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Редактировать мастера</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-4">
+    <h2>Редактировать мастера</h2>
+
+    <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+    <form th:action="@{/masters/edit/{id}(id=${master.id})}" th:object="${master}" method="post">
+        <div class="mb-3">
+            <label class="form-label">Имя мастера</label>
+            <input type="text" class="form-control" th:field="*{name}" required>
+            <div th:if="${#fields.hasErrors('name')}" class="text-danger" th:errors="*{name}"></div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+        <a href="/masters" class="btn btn-secondary">Отмена</a>
+    </form>
+</div>
+</body>
+</html>

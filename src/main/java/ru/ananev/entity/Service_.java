@@ -1,12 +1,13 @@
 package ru.ananev.entity;
 
 import javax.persistence.*;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "services")
-public class Service {
+public class Service_ {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -14,19 +15,19 @@ public class Service {
     @Column(name = "name", nullable = false, length = 200)
     private String name;
 
-    @Column(name = "cost_our", nullable = false)
-    private Double costOur;
+    @Column(name = "cost_our", nullable = false, precision = 10, scale = 2)
+    private BigDecimal costOur;
 
-    @Column(name = "cost_foreign", nullable = false)
-    private Double costForeign;
+    @Column(name = "cost_foreign", nullable = false, precision = 10, scale = 2)
+    private BigDecimal costForeign;
 
     @OneToMany(mappedBy = "service", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Work> works = new ArrayList<>();
 
     // Конструкторы
-    public Service() {}
+    public Service_() {}
 
-    public Service(String name, Double costOur, Double costForeign) {
+    public Service_(String name, BigDecimal costOur, BigDecimal costForeign) {
         this.name = name;
         this.costOur = costOur;
         this.costForeign = costForeign;
@@ -49,19 +50,19 @@ public class Service {
         this.name = name;
     }
 
-    public Double getCostOur() {
+    public BigDecimal getCostOur() {
         return costOur;
     }
 
-    public void setCostOur(Double costOur) {
+    public void setCostOur(BigDecimal costOur) {
         this.costOur = costOur;
     }
 
-    public Double getCostForeign() {
+    public BigDecimal getCostForeign() {
         return costForeign;
     }
 
-    public void setCostForeign(Double costForeign) {
+    public void setCostForeign(BigDecimal costForeign) {
         this.costForeign = costForeign;
     }
 

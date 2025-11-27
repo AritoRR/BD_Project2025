@@ -1,10 +1,7 @@
 package ru.ananev.repository;
 
-
+import ru.ananev.dto.MasterWorkStatsDTO;
 import ru.ananev.entity.Work;
-import ru.ananev.entity.Master;
-import ru.ananev.entity.Car;
-import ru.ananev.entity.Service;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,30 +17,45 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
 
     List<Work> findByDateWorkBetween(LocalDate startDate, LocalDate endDate);
 
-    List<Work> findByMaster(Master master);
+    @Query("SELECT COUNT(w) FROM Work w WHERE w.master.id = :masterId AND w.dateWork = :dateWork")
+    Long countWorksByMasterAndDate(@Param("masterId") Long masterId, @Param("dateWork") LocalDate dateWork);
 
-    List<Work> findByCar(Car car);
+    List<Work> findAllByOrderByDateWorkDesc();
 
-    List<Work> findByService(Service service);
-
-    List<Work> findByMasterAndDateWork(Master master, LocalDate dateWork);
-
-    @Query("SELECT COUNT(w) FROM Work w WHERE w.master = :master AND w.dateWork = :dateWork")
-    Long countWorksByMasterAndDate(@Param("master") Master master, @Param("dateWork") LocalDate dateWork);
-
-    @Query("SELECT w FROM Work w WHERE w.dateWork >= :startDate ORDER BY w.dateWork DESC")
-    List<Work> findRecentWorks(@Param("startDate") LocalDate startDate);
-
-    // Для проверки ограничения: не более 1 работы в день на мастера
-    default boolean canAssignWorkToMaster(Master master, LocalDate date) {
-        return countWorksByMasterAndDate(master, date) < 2;
+    // Проверка ограничения: не более 2 работ в день на мастера
+    default boolean canAssignWorkToMaster(Long masterId, LocalDate date) {
+        return countWorksByMasterAndDate(masterId, date) < 2;
     }
 
-    // Получение работ за последний месяц
-    default List<Work> findWorksFromLastMonth() {
-        LocalDate oneMonthAgo = LocalDate.now().minusMonths(1);
-        return findByDateWorkAfter(oneMonthAgo);
-    }
+    /**
+     * Получить стоимость услуг по типу автомобиля и диапазону дат
+     * ИСПРАВЛЕННЫЙ ЗАПРОС - убрал проверки на NULL
+     */
+    @Query("SELECT w.car.isForeign, SUM(" +
+            "CASE WHEN w.car.isForeign = true THEN w.service.costForeign " +
+            "ELSE w.service.costOur END) " +
+            "FROM Work w " +
+            "WHERE w.dateWork BETWEEN :startDate AND :endDate " +
+            "GROUP BY w.car.isForeign")
+    List<Object[]> findServiceCostByCarTypeAndDateRange(@Param("startDate") LocalDate startDate,
+                                                        @Param("endDate") LocalDate endDate);
 
-    List<Work> findByDateWorkAfter(LocalDate date);
+    /**
+     * Топ мастеров по количеству работ для разных автомобилей в заданном месяце
+     * ИСПРАВЛЕННЫЙ ЗАПРОС - используем правильные функции для дат
+     */
+    @Query("SELECT NEW ru.ananev.dto.MasterWorkStatsDTO(" +
+            "w.master.id, w.master.name, COUNT(w), COUNT(DISTINCT w.car)) " +
+            "FROM Work w " +
+            "WHERE EXTRACT(MONTH FROM w.dateWork) = :month AND EXTRACT(YEAR FROM w.dateWork) = :year " +
+            "GROUP BY w.master.id, w.master.name " +
+            "ORDER BY COUNT(DISTINCT w.car) DESC, COUNT(w) DESC")
+    List<MasterWorkStatsDTO> findTopMastersByMonth(@Param("month") Integer month,
+                                                   @Param("year") Integer year);
+
+    /**
+     * Получить минимальную и максимальную даты работ для фильтров
+     */
+    @Query("SELECT MIN(w.dateWork), MAX(w.dateWork) FROM Work w")
+    List<Object[]> findWorkDateRange();
 }

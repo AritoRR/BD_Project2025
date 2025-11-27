@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Топ мастеров - Отчет</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div class="container">
+    <a class="navbar-brand" href="/dashboard">🚗 Автосервис</a>
+    <div class="navbar-nav ms-auto">
+            <span class="navbar-text text-white me-3">
+                <span sec:authentication="name"></span>
+            </span>
+      <a href="/dashboard" class="btn btn-outline-light btn-sm me-2">Главная</a>
+      <form th:action="@{/logout}" method="post" class="d-inline">
+        <button type="submit" class="btn btn-outline-light btn-sm">Выйти</button>
+      </form>
+    </div>
+  </div>
+</nav>
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>👨‍🔧 Топ-5 мастеров по эффективности</h2>
+        <a href="/reports" class="btn btn-secondary">📊 Все отчеты</a>
+      </div>
+
+      <!-- Фильтры -->
+      <div class="card mb-4">
+        <div class="card-header bg-warning text-dark">
+          <h5 class="mb-0">📅 Выбор периода</h5>
+        </div>
+        <div class="card-body">
+          <form action="/reports/masters" method="get" class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Месяц</label>
+              <select class="form-control" name="month">
+                <option value="1" th:selected="${selectedMonth == 1}">Январь</option>
+                <option value="2" th:selected="${selectedMonth == 2}">Февраль</option>
+                <option value="3" th:selected="${selectedMonth == 3}">Март</option>
+                <option value="4" th:selected="${selectedMonth == 4}">Апрель</option>
+                <option value="5" th:selected="${selectedMonth == 5}">Май</option>
+                <option value="6" th:selected="${selectedMonth == 6}">Июнь</option>
+                <option value="7" th:selected="${selectedMonth == 7}">Июль</option>
+                <option value="8" th:selected="${selectedMonth == 8}">Август</option>
+                <option value="9" th:selected="${selectedMonth == 9}">Сентябрь</option>
+                <option value="10" th:selected="${selectedMonth == 10}">Октябрь</option>
+                <option value="11" th:selected="${selectedMonth == 11}">Ноябрь</option>
+                <option value="12" th:selected="${selectedMonth == 12}">Декабрь</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Год</label>
+              <input type="number"
+                     class="form-control"
+                     name="year"
+                     th:value="${selectedYear != null} ? ${selectedYear} : ${currentYear}"
+                     min="2020"
+                     max="2030">
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+              <button type="submit" class="btn btn-warning w-100">Показать</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Результаты -->
+      <div class="card">
+        <div class="card-header bg-success text-white">
+          <h5 class="mb-0">🏆 Рейтинг мастеров</h5>
+        </div>
+        <div class="card-body">
+          <div th:if="${#lists.isEmpty(topMasters)}" class="text-center py-5">
+            <h5 class="text-muted">Нет данных за выбранный период</h5>
+            <p class="text-muted">Попробуйте выбрать другой месяц или год</p>
+          </div>
+
+          <div th:unless="${#lists.isEmpty(topMasters)}">
+            <!-- Таблица рейтинга -->
+            <div class="table-responsive">
+              <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                <tr>
+                  <th width="10%">Место</th>
+                  <th width="30%">Мастер</th>
+                  <th width="15%">Всего работ</th>
+                  <th width="20%">Уникальных авто</th>
+                  <th width="25%">Эффективность</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="master, stat : ${topMasters}">
+                  <td>
+                    <div class="text-center">
+                      <span th:if="${stat.index == 0}" class="badge bg-warning fs-6">🥇 1</span>
+                      <span th:if="${stat.index == 1}" class="badge bg-secondary fs-6">🥈 2</span>
+                      <span th:if="${stat.index == 2}" class="badge bg-danger fs-6">🥉 3</span>
+                      <span th:if="${stat.index > 2}" class="badge bg-info fs-6" th:text="${stat.index + 1}"></span>
+                    </div>
+                  </td>
+                  <td>
+                    <strong th:text="${master.masterName}"></strong>
+                  </td>
+                  <td>
+                    <span class="badge bg-primary fs-6" th:text="${master.workCount}"></span>
+                  </td>
+                  <td>
+                    <span class="badge bg-success fs-6" th:text="${master.uniqueCarsCount}"></span>
+                  </td>
+                  <td>
+                    <div class="progress" style="height: 25px;">
+                      <div class="progress-bar bg-success"
+                           role="progressbar"
+                           th:style="'width: ' + ${(master.uniqueCarsCount / 5) * 100} + '%;'"
+                           th:aria-valuenow="${(master.uniqueCarsCount / 5) * 100}"
+                           aria-valuemin="0"
+                           aria-valuemax="100">
+                        <strong th:text="${(master.uniqueCarsCount / 5) * 100 + '%'}"></strong>
+                      </div>
+                    </div>
+                    <small class="text-muted">
+                      Показатель: <span th:text="${master.uniqueCarsCount}"></span> из 5
+                    </small>
+                  </td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Статистика -->
+            <div class="row mt-4">
+              <div class="col-md-6">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <h6>📈 Общая статистика</h6>
+                    <p class="mb-1">
+                      Всего работ выполнено:
+                      <strong th:text="${#lists.stream(topMasters).map(m -> m.workCount).reduce(0, (a, b) -> a + b)}"></strong>
+                    </p>
+                    <p class="mb-0">
+                      Уникальных автомобилей:
+                      <strong th:text="${#lists.stream(topMasters).map(m -> m.uniqueCarsCount).reduce(0, (a, b) -> a + b)}"></strong>
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card bg-light">
+                  <div class="card-body text-center">
+                    <h6>📅 Период анализа</h6>
+                    <h4 th:text="${selectedMonth + '/' + selectedYear}"></h4>
+                    <p class="text-muted mb-0">Месяц/Год</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

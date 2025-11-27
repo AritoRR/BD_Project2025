@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Редактировать работу</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div class="container">
+    <a class="navbar-brand" href="/dashboard">🚗 Автосервис</a>
+    <div class="navbar-nav ms-auto">
+            <span class="navbar-text text-white me-3">
+                <span sec:authentication="name"></span>
+            </span>
+      <a href="/dashboard" class="btn btn-outline-light btn-sm me-2">Главная</a>
+      <form th:action="@{/logout}" method="post" class="d-inline">
+        <button type="submit" class="btn btn-outline-light btn-sm">Выйти</button>
+      </form>
+    </div>
+  </div>
+</nav>
+
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header bg-warning text-dark">
+          <h4 class="mb-0">✏️ Редактировать работу</h4>
+        </div>
+        <div class="card-body">
+          <div th:if="${errorMessage}" class="alert alert-danger">
+            <span th:text="${errorMessage}"></span>
+          </div>
+
+          <form th:action="@{/works/edit/{id}(id=${work.id})}" th:object="${work}" method="post">
+            <!-- Дата работы -->
+            <div class="mb-3">
+              <label class="form-label">📅 Дата выполнения работы</label>
+              <input type="date"
+                     class="form-control"
+                     th:field="*{dateWork}"
+                     th:value="${work.dateWork != null} ? ${#temporals.format(work.dateWork, 'yyyy-MM-dd')} : ''"
+                     required>
+              <small class="form-text text-muted">Формат: ГГГГ-ММ-ДД</small>
+              <div th:if="${#fields.hasErrors('dateWork')}" class="text-danger" th:errors="*{dateWork}"></div>
+            </div>
+
+            <!-- Выбор мастера -->
+            <div class="mb-3">
+              <label class="form-label">👨‍🔧 Мастер</label>
+              <select class="form-control" th:field="*{masterId}" required>
+                <option th:each="master : ${masters}"
+                        th:value="${master.id}"
+                        th:text="${master.name}"
+                        th:selected="${master.id == work.masterId}">
+                </option>
+              </select>
+              <div th:if="${#fields.hasErrors('masterId')}" class="text-danger" th:errors="*{masterId}"></div>
+            </div>
+
+            <!-- Выбор автомобиля -->
+            <div class="mb-3">
+              <label class="form-label">🚗 Автомобиль</label>
+              <select class="form-control" th:field="*{carId}" required>
+                <option th:each="car : ${cars}"
+                        th:value="${car.id}"
+                        th:text="${car.mark + ' (' + car.number + ')'}"
+                        th:selected="${car.id == work.carId}">
+                </option>
+              </select>
+              <div th:if="${#fields.hasErrors('carId')}" class="text-danger" th:errors="*{carId}"></div>
+            </div>
+
+            <!-- Выбор услуги -->
+            <div class="mb-3">
+              <label class="form-label">🔧 Услуга</label>
+              <select class="form-control" th:field="*{serviceId}" required>
+                <option th:each="service : ${services}"
+                        th:value="${service.id}"
+                        th:text="${service.name + ' (' + service.costOur + '/' + service.costForeign + ' руб.)'}"
+                        th:selected="${service.id == work.serviceId}">
+                </option>
+              </select>
+              <div th:if="${#fields.hasErrors('serviceId')}" class="text-danger" th:errors="*{serviceId}"></div>
+            </div>
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+              <button type="submit" class="btn btn-warning me-md-2">💾 Сохранить изменения</button>
+              <a href="/works" class="btn btn-secondary">❌ Отмена</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
